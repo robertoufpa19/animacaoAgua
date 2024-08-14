@@ -5,6 +5,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -19,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ImageView corpoimage, buttonCopo;
     private int waterLevel = 0; // Nível inicial da água
-    private Bitmap originalBitmap;
+    private Bitmap originalBitmap, maskBitmap;
     private CustomSeekBar customSeekBar;
     private TextView progressText;
     private int targetWaterLevel = 0;
@@ -34,8 +36,9 @@ public class MainActivity extends AppCompatActivity {
         progressText = findViewById(R.id.progressText);
         customSeekBar = findViewById(R.id.customSeekBar);
 
-        // Carregar a imagem original
+        // Carregar a imagem original e a máscara
         originalBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.corpo);
+        maskBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.corpo);
 
         // Configurar o botão para simular o efeito de água
         buttonCopo.setOnClickListener(new View.OnClickListener() {
@@ -79,20 +82,40 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateWaterLevel() {
-        int height = originalBitmap.getHeight();
         int width = originalBitmap.getWidth();
+        int height = originalBitmap.getHeight();
 
-        // Criar um bitmap editável
+        // Criar um bitmap editável para a imagem final
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
+
+        // Desenhar a imagem original no canvas
         canvas.drawBitmap(originalBitmap, 0, 0, null);
 
-        // Desenhar a "água"
-        Paint paint = new Paint();
-        paint.setARGB(128, 0, 0, 255); // Cor azul semi-transparente
-        canvas.drawRect(0, height - waterLevel, width, height, paint);
+        // Criar um bitmap para a água
+        Bitmap waterBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas waterCanvas = new Canvas(waterBitmap);
+        Paint waterPaint = new Paint();
+        waterPaint.setARGB(128, 0, 0, 255); // Cor azul semi-transparente
+        waterCanvas.drawRect(0, height - waterLevel, width, height, waterPaint);
+
+        // Criar um paint para o efeito de máscara
+        Paint maskPaint = new Paint();
+        maskPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+
+        // Criar um bitmap para a máscara
+        Bitmap maskBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas maskCanvas = new Canvas(maskBitmap);
+        maskCanvas.drawBitmap(originalBitmap, 0, 0, null); // Desenhar a imagem original na máscara
+
+        // Aplicar a água sobre a máscara
+        maskCanvas.drawBitmap(waterBitmap, 0, 0, maskPaint);
+
+        // Desenhar a máscara sobre o bitmap final
+        canvas.drawBitmap(maskBitmap, 0, 0, null);
 
         // Atualizar o ImageView com o novo bitmap
         corpoimage.setImageBitmap(bitmap);
     }
+
 }
