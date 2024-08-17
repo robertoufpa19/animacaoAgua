@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
         Bitmap waterBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas waterCanvas = new Canvas(waterBitmap);
         Paint waterPaint = new Paint();
-        waterPaint.setARGB(128, 0, 0, 255); // Cor azul semi-transparente
+        waterPaint.setARGB(128, 0, 50, 255); // Cor azul
         waterCanvas.drawRect(0, height - waterLevel, width, height, waterPaint);
 
         // Criar um paint para o efeito de máscara
